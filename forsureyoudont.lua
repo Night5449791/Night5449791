@@ -1,13 +1,47 @@
-for i, v in game:GetDescendants() do
-    if v:IsA("RemoteEvent") then
-        v:FireServer({}, 23909043, "amogus", "9032949084390289048230948290348924390432902432409439290342934239240098342904323904289052890583240923489023409234", {})
-    elseif v:IsA("RemoteFunction") then
-        v:InvokeServer({}, 23909043, "amogus", "9032949084390289048230948290348924390432902432409439290342934239240098342904323904289052890583240923489023409234", {})
-    end
-end
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-if raknet then
-    raknet.OnPacketReceive:Connect(function(packet)
-        packet:Block()
-    end)
-end
+local LocalPlayer = Players.LocalPlayer
+local meleeEvent = ReplicatedStorage:WaitForChild("meleeEvent")
+
+local states = {
+    KILLAURA = true
+}
+
+coroutine.wrap(function()
+    while task.wait(0.5) do
+        if states.KILLAURA then
+            local character = LocalPlayer.Character
+            local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+
+            if rootPart then
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer then
+                        pcall(function()
+                            local targetCharacter = player.Character
+                            local targetRoot = targetCharacter
+                                and targetCharacter:FindFirstChild("HumanoidRootPart")
+
+                            local humanoid = targetCharacter
+                                and targetCharacter:FindFirstChildOfClass("Humanoid")
+
+                            if targetRoot and humanoid and humanoid.Health > 0 then
+                                local distance = (
+                                    rootPart.Position - targetRoot.Position
+                                ).Magnitude
+
+                                if distance < 10 then
+                                    local hits = math.ceil(humanoid.Health / 5)
+
+                                    for i = 1, hits do
+                                        meleeEvent:FireServer(player)
+                                    end
+                                end
+                            end
+                        end)
+                    end
+                end
+            end
+        end
+    end
+end)()
